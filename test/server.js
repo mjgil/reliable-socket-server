@@ -126,9 +126,15 @@ describe('reliable-server', function () {
   describe('onRecon', function() {
     var reliableServer = reliableServerConstructor();
     // TODO
+    // move socket.close to reliable onClose
   })
 
   describe('onMessage', function() {
+    var reliableServer = reliableServerConstructor();
+    // TODO
+  })
+
+  describe('onClose', function() {
     var reliableServer = reliableServerConstructor();
     // TODO
   })
