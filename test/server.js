@@ -1,6 +1,7 @@
 var reliableServerConstructor = require('../index'),
   expect = require('expect.js'),
-  parser = require('reliable-socket-protocol');
+  parser = require('reliable-socket-protocol'),
+  jstring = JSON.stringify;
 
 describe('reliable-server', function () {
 
@@ -64,5 +65,50 @@ describe('reliable-server', function () {
       expect(reliableServer.getSession(ssocket)).to.be(sdata);
     })
   })
+
+  describe('onOpen', function() {
+    var reliableServer = reliableServerConstructor(),
+        tid = '123', data = ['test', 'tset'],
+        sentData = [[1,'test'],[2,'tset']],
+        seenObj = {1: true, 2:true};
+
+    reliableServer.temp_sessions = {
+      '123': {
+        seenObj: seenObj,
+        lastSeen: 2,
+        writeBuffer: data
+      }
+    };
+    var socket = {
+      _tid: tid,
+      _sendBuffer: [],
+      _send: function(string) {
+        this._sendBuffer.push(string);
+      }
+    }
+
+    reliableServer.onOpen(socket);
+    it('should set a new session id', function() {
+      expect(socket._sid).to.be.a('string');
+    })
+    it('should send data correctly', function() {
+      var sendBuffer = socket._sendBuffer;
+      expect(sendBuffer.length).to.be(2);
+      expect(sendBuffer[0]).to.be(
+        parser.encodePacket({type: 'sid', data: socket._sid}));
+      expect(sendBuffer[1]).to.be(
+        parser.encodePacket({type: 'message', data: sentData}));
+    })
+    it('should set the new session correctly', function() {
+      var session = reliableServer.sessions[socket._sid];
+      expect(session.socket).to.be(socket);
+      expect(session.packetCount).to.be(2);
+      expect(jstring(session.writeBuffer)).to.be(jstring(sentData));
+      expect(session.seenObj).to.be(seenObj);
+      expect(session.lastSeen).to.be(2);
+    })
+
+
+  });
   
 });
