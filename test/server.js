@@ -107,8 +107,65 @@ describe('reliable-server', function () {
       expect(session.seenObj).to.be(seenObj);
       expect(session.lastSeen).to.be(2);
     })
-
-
   });
+
+  describe('onAck', function() {
+    var reliableServer = reliableServerConstructor(),
+    sid = '123', data = [[1, 'test'],[2, 'tset']], id = '2',
+    socket = {_sid: sid}, session;
+
+    reliableServer.sessions[sid] = session = {writeBuffer: data};
+
+    reliableServer.onAck({_sid: sid}, id);
+    it('should remove the correct packet', function() {
+      expect(session.writeBuffer.length).to.be(1);
+      expect(session.writeBuffer[0]).to.be(data[0]);
+    });
+  });
+
+  describe('onRecon', function() {
+    var reliableServer = reliableServerConstructor();
+    // TODO
+  })
+
+  describe('onMessage', function() {
+    var reliableServer = reliableServerConstructor();
+    // TODO
+  })
+
+  describe('overrideSend', function() {
+    var reliableServer = reliableServerConstructor();
+    // TODO
+  })
+
+  describe('overrideOnData', function() {
+    var reliableServer = reliableServerConstructor();
+    // TODO
+  })
+
+  describe('flushTempSession', function() {
+    var reliableServer = reliableServerConstructor(),
+        tid = '123', sid = '321', data = ['test', 'tset'],
+        sentData = [[1,'test'],[2,'tset']];
+
+    reliableServer.temp_sessions[tid] = {writeBuffer: data};
+    reliableServer.sessions[sid] = {writeBuffer: [], packetCount: 0};
+    var socket = {
+      _tid: tid,
+      _sid: sid,
+      _sendBuffer: [],
+      _send: function(string) {
+        this._sendBuffer.push(string);
+      }
+    }
+
+    reliableServer.flushTempSession(socket);
+    it('should send data correctly', function() {
+      var sendBuffer = socket._sendBuffer;
+      expect(sendBuffer.length).to.be(1);
+      expect(sendBuffer[0]).to.be(
+        parser.encodePacket({type: 'message', data: sentData}));
+    })
+  })
   
 });
