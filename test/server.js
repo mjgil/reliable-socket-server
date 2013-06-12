@@ -48,6 +48,21 @@ describe('reliable-server', function () {
     });
   });
 
+  describe('getSession', function() {
+    var reliableServer = reliableServerConstructor(),
+        sid = '123', tid = '321', tdata = 'test',
+        sdata = 'tset';
 
+    reliableServer.temp_sessions[tid] = tdata;
+    reliableServer.sessions[sid] = sdata;
+
+    var tsocket = {_tid: tid},
+        ssocket = {_sid: sid};
+
+    it('should get the correct session', function() {
+      expect(reliableServer.getSession(tsocket)).to.be(tdata);
+      expect(reliableServer.getSession(ssocket)).to.be(sdata);
+    })
+  })
   
 });
